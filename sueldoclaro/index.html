@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SueldoClaro - Control Financiero Profesional</title>
+    <!-- Librerías de alta compatibilidad para capturar y procesar el comprobante visual -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #0f172a; /* Azul noche elegante */
+            --accent: #2563eb;  /* Azul corporativo confiable */
+            --accent-hover: #1d4ed8;
+            --success: #15803d; /* Verde éxito institucional */
+            --success-bg: #f0fdf4;
+            --danger: #b91c1c;  /* Rojo alerta sobrio */
+            --danger-bg: #fef2f2;
+            --background: #0f172a; /* Fondo oscuro elegante */
+            --surface: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 30px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 35px;
+        }
+
+        header h1 {
+            color: #ffffff;
+            font-size: 2.6rem;
+            font-weight: 800;
+            letter-spacing: -0.05em;
+            margin-bottom: 6px;
+        }
+
+        header h1 span {
+            color: #3b82f6;
+        }
+
+        header p {
+            color: #94a3b8;
+            font-size: 1.05rem;
+            font-weight: 400;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #475569;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            color: var(--text-main);
+            background-color: #f8fafc;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent);
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(37, 99, 234, 0.1);
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 2fr 1.3fr 1fr;
+            gap: 12px;
+            align-items: flex-end;
+        }
+
+        @media (max-width: 600px) {
+            .row { grid-template-columns: 1fr; gap: 16px; }
+        }
+
+        button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+            box-shadow: 0 4px 12px rgba(37, 99, 234, 0.2);
+        }
+
+        .btn-danger {
+            background-color: transparent;
+            color: #ef4444;
+            border: 1px solid #fee2e2;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            width: auto;
+            border-radius: 6px;
+        }
+
+        .btn-danger:hover {
+            background-color: #ef4444;
+            color: white;
+            border-color: #ef4444;
+            box-shadow: none;
+        }
+
+        .gastos-lista {
+            list-style: none;
+            margin-top: 16px;
+            border-top: 1px dashed var(--border);
+            padding-top: 8px;
+        }
+
+        .gasto-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 4px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .gasto-item:last-child { border-bottom: none; }
+
+        .gasto-info {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .gasto-categoria {
+            background: #e2e8f0;
+            color: #475569;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .resultado-box {
+            text-align: center;
+            padding: 24px;
+            border-radius: 12px;
+        }
+
+        .monto-final {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-top: 6px;
+            letter-spacing: -0.03em;
+        }
+
+        .estado-positivo {
+            background-color: var(--success-bg);
+            color: var(--success);
+            border: 1px solid #bbf7d0;
+        }
+
+        .estado-negativo {
+            background-color: var(--danger-bg);
+            color: var(--danger);
+            border: 1px solid #fca5a5;
+        }
+
+        .informe-seccion {
+            display: none;
+        }
+
+        /* Bloque estricto del Comprobante Elegante */
+        .pdf-layout {
+            padding: 24px;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            color: #0f172a;
+        }
+
+        .pdf-header {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 16px;
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .pdf-sueldo-bloque {
+            font-size: 1.05rem;
+            margin-bottom: 16px;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .informe-tabla {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .informe-tabla th, .informe-tabla td {
+            border: 1px solid #cbd5e1;
+            padding: 10px 12px;
+            text-align: left;
+        }
+
+        .informe-tabla th {
+            background-color: #f8fafc;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .pdf-total-bloque {
+            margin-top: 20px;
+            padding: 14px;
+            border-radius: 6px;
+            font-size: 1.25rem;
+            font-weight: 800;
+            text-align: right;
+        }
+
+        .btn-compartir {
+            background-color: #16a34a;
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-compartir:hover {
+            background-color: #15803d;
+            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Sueldo<span>Claro</span></h1>
+            <p>Gestión financiera estructural estricta</p>
+        </header>
+
+        <!-- 1. Sueldo -->
+        <div class="card">
+            <h2>💰 1. Ingresá tu Sueldo Neto</h2>
+            <div class="form-group">
+                <label for="sueldoInput">Monto disponible en cuenta ($)</label>
+                <input type="number" id="sueldoInput" placeholder="Ej. 650000" min="0" oninput="actualizarTodo()">
+            </div>
+        </div>
+
+        <!-- 2. Gastos -->
+        <div class="card">
+            <h2>📉 2. Declará tus Gastos</h2>
+            <div class="row">
+                <div class="form-group">
+                    <label for="gastoNombre">Concepto</label>
+                    <input type="text" id="gastoNombre" placeholder="Ej. Tarjeta, Campera">
+                </div>
+                <div class="form-group">
+                    <label for="gastoCategoria">Área de Gasto</label>
+                    <select id="gastoCategoria">
+                        <option value="Banco">Banco</option>
+                        <option value="Ropa">Ropa</option>
+                        <option value="Uso Personal">Uso Personal</option>
+                        <option value="Vivienda">Vivienda</option>
+                        <option value="Alimentación">Alimentación</option>
+                        <option value="Servicios">Servicios</option>
+                        <option value="Transporte">Transporte</option>
+                        <option value="Educación">Educación</option>
+                        <option value="Salud">Salud</option>
+                        <option value="Entretenimiento">Entretenimiento</option>
+                        <option value="Otros">Otros</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="gastoMonto">Monto ($)</label>
+                    <input type="number" id="gastoMonto" placeholder="Ej. 8500" min="0">
+                </div>
+            </div>
+            <button onclick="agregarGasto()" style="margin-top: 12px;">Añadir Registro</button>
+
+            <ul class="gastos-lista" id="listaGastosUI"></ul>
+        </div>
+
+        <!-- 3. Balance en Pantalla -->
+        <div class="card">
+            <h2>🏛️ 3. Balance de Estado</h2>
+            <div id="resultadoBox" class="resultado-box estado-positivo">
+                <span id="resultadoEtiqueta" style="font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">Sueldo restante disponible</span>
+                <div id="balanceFinal" class="monto-final">$0,00</div>
+            </div>
+        </div>
+
+        <!-- 4. Estructura Exclusiva de Comprobante y Un Solo Botón -->
+        <div class="card informe-seccion" id="informeContenedor">
+            <h2>📋 4. Comprobante Oficial</h2>
+            
+            <div id="plantillaPdf" class="pdf-layout">
+                <div class="pdf-header">SueldoClaro // Reporte de Balance</div>
+                
+                <div class="pdf-sueldo-bloque">
+                    Sueldo Inicial: <span id="pdfSueldoMonto">$0,00</span>
+                </div>
+
+                <table class="informe-tabla">
+                    <thead>
+                        <tr>
+                            <th>Concepto</th>
+                            <th>Área</th>
+                            <th>Monto</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaCuerpoInforme"></tbody>
+                </table>
+
+                <div id="pdfTotalBloque" class="pdf-total-bloque"></div>
+            </div>
+
+            <button class="btn-compartir" onclick="procesarYCompartir()">
+                📤 Compartir Comprobante Directo
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let listaDeGastos = [];
+
+        function agregarGasto() {
+            const nombreInput = document.getElementById('gastoNombre');
+            const categoriaSelect = document.getElementById('gastoCategoria');
+            const montoInput = document.getElementById('gastoMonto');
+
+            const nombre = nombreInput.value.trim();
+            const categoria = categoriaSelect.value;
+            const monto = parseFloat(montoInput.value);
+
+            if (nombre === '' || isNaN(monto) || monto <= 0) {
+                alert('Por favor, complete los campos con montos válidos.');
+                return;
+            }
+
+            listaDeGastos.push({ id: Date.now(), nombre, categoria, monto });
+            nombreInput.value = '';
+            montoInput.value = '';
+
+            actualizarTodo();
+        }
+
+        function eliminarGasto(id) {
+            listaDeGastos = listaDeGastos.filter(gasto => gasto.id !== id);
+            actualizarTodo();
+        }
+
+        function actualizarTodo() {
+            const sueldoInput = document.getElementById('sueldoInput');
+            let sueldo = parseFloat(sueldoInput.value) || 0;
+
+            const listaGastosUI = document.getElementById('listaGastosUI');
+            listaGastosUI.innerHTML = '';
+            let totalGastado = 0;
+
+            listaDeGastos.forEach(gasto => {
+                totalGastado += gasto.monto;
+                const li = document.createElement('li');
+                li.className = 'gasto-item';
+                li.innerHTML = `
+                    <div class="gasto-info">
+                        <strong>${gasto.nombre}</strong> 
+                        <span class="gasto-categoria">${gasto.categoria}</span>
+                    </div>
+                    <div>
+                        <span style="font-weight:700; margin-right:15px; color: var(--primary);">$${gasto.monto.toLocaleString('es-AR', {minimumFractionDigits: 2})}</span>
+                        <button class="btn-danger" onclick="eliminarGasto(${gasto.id})">Quitar</button>
+                    </div>
+                `;
+                listaGastosUI.appendChild(li);
+            });
+
+            const saldoFinal = sueldo - totalGastado;
+            const balanceFinalUI = document.getElementById('balanceFinal');
+            const resultadoBox = document.getElementById('resultadoBox');
+            const resultadoEtiqueta = document.getElementById('resultadoEtiqueta');
+            const saldoFormateado = `$${Math.abs(saldoFinal).toLocaleString('es-AR', {minimumFractionDigits: 2})}`;
+
+            if (saldoFinal >= 0) {
+                balanceFinalUI.innerText = saldoFormateado;
+                resultadoEtiqueta.innerText = "Sueldo restante disponible";
+                resultadoBox.className = "resultado-box estado-positivo";
+                balanceFinalUI.style.color = "var(--success)";
+            } else {
+                balanceFinalUI.innerText = saldoFormateado;
+                resultadoEtiqueta.innerText = "Monto que quedó debiendo";
+                resultadoBox.className = "resultado-box estado-negativo";
+                balanceFinalUI.style.color = "var(--danger)";
+            }
+
+            const informeContenedor = document.getElementById('informeContenedor');
+            const tablaCuerpoInforme = document.getElementById('tablaCuerpoInforme');
+            const pdfSueldoMonto = document.getElementById('pdfSueldoMonto');
+            const pdfTotalBloque = document.getElementById('pdfTotalBloque');
+
+            if (listaDeGastos.length > 0) {
+                informeContenedor.style.display = 'block';
+                tablaCuerpoInforme.innerHTML = '';
+                pdfSueldoMonto.innerText = `$${sueldo.toLocaleString('es-AR', {minimumFractionDigits: 2})}`;
+
+                listaDeGastos.forEach(gasto => {
+                    const fila = document.createElement('tr');
+                    fila.innerHTML = `
+                        <td>${gasto.nombre}</td>
+                        <td>${gasto.categoria}</td>
+                        <td>$${gasto.monto.toLocaleString('es-AR', {minimumFractionDigits: 2})}</td>
+                    `;
+                    tablaCuerpoInforme.appendChild(fila);
+                });
+
+                if (saldoFinal >= 0) {
+                    pdfTotalBloque.innerText = `Saldo restante: ${saldoFormateado}`;
+                    pdfTotalBloque.className = "pdf-total-bloque estado-positivo";
+                } else {
+                    pdfTotalBloque.innerText = `Quedó debiendo: ${saldoFormateado}`;
+                    pdfTotalBloque.className = "pdf-total-bloque estado-negativo";
+                }
+            } else {
+                informeContenedor.style.display = 'none';
+            }
+        }
+
+        // NUEVA LOGICA ROBUSTA: Convierte a imagen prolija compartible o descargable instantáneamente
+        function procesarYCompartir() {
+            const contenedorComprobante = document.getElementById('plantillaPdf');
+            
+            // Renderiza la sección exacta del comprobante con alta calidad
+            html2canvas(contenedorComprobante, { scale: 2, useCORS: true }).then(canvas => {
+                canvas.toBlob(blob => {
+                    const archivoComprobante = new File([blob], 'Comprobante_SueldoClaro.png', { type: 'image/png' });
+
+                    // Ruta 1: Compartir directo si el sistema operativo y entorno seguro lo permiten
+                    if (navigator.share && navigator.canShare && navigator.canShare({ files: [archivoComprobante] })) {
+                        navigator.share({
+                            files: [archivoComprobante],
+                            title: 'Comprobante SueldoClaro',
+                            text: 'Envío reporte oficial de balance.'
+                        }).catch(err => ejecutarDescargaAlternativa(canvas));
+                    } else {
+                        // Ruta 2: Descarga automática universal inmediata (para PC o entornos sin HTTPS)
+                        ejecutarDescargaAlternativa(canvas);
+                    }
+                }, 'image/png');
+            });
+        }
+
+        function ejecutarDescargaAlternativa(canvas) {
+            const enlaceDescarga = document.createElement('a');
+            enlaceDescarga.download = 'Comprobante_SueldoClaro.png';
+            enlaceDescarga.href = canvas.toDataURL('image/png');
+            enlaceDescarga.click();
+            alert('Comprobante oficial generado. Se guardó automáticamente en tu dispositivo para que lo puedas adjuntar y compartir por WhatsApp o cualquier otra aplicación.');
+        }
+    </script>
+</body>
+</html>
