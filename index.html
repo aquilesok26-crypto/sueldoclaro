@@ -4,8 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SueldoClaro - Control Financiero Profesional</title>
-    <!-- Librerías de alta compatibilidad para capturar y procesar el comprobante visual -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         :root {
             --primary: #0f172a; /* Azul noche elegante */
@@ -222,7 +220,7 @@
             display: none;
         }
 
-        /* Bloque estricto del Comprobante Elegante */
+        /* Bloque del Comprobante en Pantalla */
         .pdf-layout {
             padding: 24px;
             background: #ffffff;
@@ -277,7 +275,8 @@
         }
 
         .btn-compartir {
-            background-color: #16a34a;
+            background-color: #25d366; /* Verde Oficial WhatsApp */
+            color: white;
             margin-top: 20px;
             display: flex;
             align-items: center;
@@ -285,8 +284,8 @@
             gap: 8px;
         }
         .btn-compartir:hover {
-            background-color: #15803d;
-            box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+            background-color: #128c7e;
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2);
         }
     </style>
 </head>
@@ -298,7 +297,6 @@
             <p>Gestión financiera estructural estricta</p>
         </header>
 
-        <!-- 1. Sueldo -->
         <div class="card">
             <h2>💰 1. Ingresá tu Sueldo Neto</h2>
             <div class="form-group">
@@ -307,7 +305,6 @@
             </div>
         </div>
 
-        <!-- 2. Gastos -->
         <div class="card">
             <h2>📉 2. Declará tus Gastos</h2>
             <div class="row">
@@ -341,7 +338,6 @@
             <ul class="gastos-lista" id="listaGastosUI"></ul>
         </div>
 
-        <!-- 3. Balance en Pantalla -->
         <div class="card">
             <h2>🏛️ 3. Balance de Estado</h2>
             <div id="resultadoBox" class="resultado-box estado-positivo">
@@ -350,13 +346,12 @@
             </div>
         </div>
 
-        <!-- 4. Estructura Exclusiva de Comprobante y Un Solo Botón -->
         <div class="card informe-seccion" id="informeContenedor">
             <h2>📋 4. Comprobante Oficial</h2>
-            
+             
             <div id="plantillaPdf" class="pdf-layout">
                 <div class="pdf-header">SueldoClaro // Reporte de Balance</div>
-                
+                 
                 <div class="pdf-sueldo-bloque">
                     Sueldo Inicial: <span id="pdfSueldoMonto">$0,00</span>
                 </div>
@@ -375,8 +370,8 @@
                 <div id="pdfTotalBloque" class="pdf-total-bloque"></div>
             </div>
 
-            <button class="btn-compartir" onclick="procesarYCompartir()">
-                📤 Compartir Comprobante Directo
+            <button class="btn-compartir" onclick="enviarPorWhatsApp()">
+                💬 Enviar Comprobante por WhatsApp
             </button>
         </div>
     </div>
@@ -485,38 +480,37 @@
             }
         }
 
-        // NUEVA LOGICA ROBUSTA: Convierte a imagen prolija compartible o descargable instantáneamente
-       function procesarYCompartir() {
-    const contenedorComprobante = document.getElementById('plantillaPdf');
-    
-    html2canvas(contenedorComprobante, { scale: 2, useCORS: true }).then(canvas => {
-        
-        if (navigator.share) {
-            navigator.share({
-                title: 'Comprobante SueldoClaro',
-                text: '¡Hola! Acabo de generar mi reporte de balance oficial en SueldoClaro. Podés ver el detalle ingresando acá: ' + window.location.href
-            })
-            .then(() => console.log('Compartido con éxito'))
-            .catch((err) => ejecutarDescargaAlternativa(canvas));
-        } else {
-            ejecutarDescargaAlternativa(canvas);
-        }
-    });
-}
+        // NUEVA LÓGICA DIRECTA A WHATSAPP: Convierte el balance a texto limpio y estructurado sin fallas
+        function enviarPorWhatsApp() {
+            const sueldoInput = document.getElementById('sueldoInput');
+            let sueldo = parseFloat(sueldoInput.value) || 0;
+            let totalGastado = 0;
+            
+            let textoMensaje = `*SUELDO CLARO // REPORTE DE BALANCE*\n`;
+            textoMensaje += `--------------------------------------\n`;
+            textoMensaje += `💰 *Sueldo Inicial:* $${sueldo.toLocaleString('es-AR', {minimumFractionDigits: 2})}\n\n`;
+            textoMensaje += `📉 *DETALLE DE GASTOS:*\n`;
 
-function ejecutarDescargaAlternativa(canvas) {
-    const enlaceDescarga = document.createElement('a');
-    enlaceDescarga.download = 'Comprobante_SueldoClaro.png';
-    enlaceDescarga.href = canvas.toDataURL('image/png');
-    enlaceDescarga.click();
-}
+            listaDeGastos.forEach(gasto => {
+                totalGastado += gasto.monto;
+                textoMensaje += `• ${gasto.nombre} (${gasto.categoria}): $${gasto.monto.toLocaleString('es-AR', {minimumFractionDigits: 2})}\n`;
+            });
 
-        function ejecutarDescargaAlternativa(canvas) {
-            const enlaceDescarga = document.createElement('a');
-            enlaceDescarga.download = 'Comprobante_SueldoClaro.png';
-            enlaceDescarga.href = canvas.toDataURL('image/png');
-            enlaceDescarga.click();
-            alert('Comprobante oficial generado. Se guardó automáticamente en tu dispositivo para que lo puedas adjuntar y compartir por WhatsApp o cualquier otra aplicación.');
+            const saldoFinal = sueldo - totalGastado;
+            const saldoFormateado = `$${Math.abs(saldoFinal).toLocaleString('es-AR', {minimumFractionDigits: 2})}`;
+
+            textoMensaje += `\n--------------------------------------\n`;
+            if (saldoFinal >= 0) {
+                textoMensaje += `🏛️ *SALDO RESTANTE DISPONIBLE:* ${saldoFormateado}`;
+            } else {
+                textoMensaje += `⚠️ *MONTO QUE QUEDÓ DEBIENDO:* ${saldoFormateado}`;
+            }
+
+            // Codifica el texto para que la URL sea válida
+            const textoCodificado = encodeURIComponent(textoMensaje);
+            
+            // Abre WhatsApp directo usando la API universal (funciona en Web y en Apps)
+            window.open(`https://api.whatsapp.com/send?text=${textoCodificado}`, '_blank');
         }
     </script>
 </body>
