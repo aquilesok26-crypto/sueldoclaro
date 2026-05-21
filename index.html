@@ -486,28 +486,30 @@
         }
 
         // NUEVA LOGICA ROBUSTA: Convierte a imagen prolija compartible o descargable instantáneamente
-        function procesarYCompartir() {
-            const contenedorComprobante = document.getElementById('plantillaPdf');
-            
-            // Renderiza la sección exacta del comprobante con alta calidad
-            html2canvas(contenedorComprobante, { scale: 2, useCORS: true }).then(canvas => {
-                canvas.toBlob(blob => {
-                    const archivoComprobante = new File([blob], 'Comprobante_SueldoClaro.png', { type: 'image/png' });
-
-                    // Ruta 1: Compartir directo si el sistema operativo y entorno seguro lo permiten
-                    if (navigator.share && navigator.canShare && navigator.canShare({ files: [archivoComprobante] })) {
-                        navigator.share({
-                            files: [archivoComprobante],
-                            title: 'Comprobante SueldoClaro',
-                            text: 'Envío reporte oficial de balance.'
-                        }).catch(err => ejecutarDescargaAlternativa(canvas));
-                    } else {
-                        // Ruta 2: Descarga automática universal inmediata (para PC o entornos sin HTTPS)
-                        ejecutarDescargaAlternativa(canvas);
-                    }
-                }, 'image/png');
-            });
+       function procesarYCompartir() {
+    const contenedorComprobante = document.getElementById('plantillaPdf');
+    
+    html2canvas(contenedorComprobante, { scale: 2, useCORS: true }).then(canvas => {
+        
+        if (navigator.share) {
+            navigator.share({
+                title: 'Comprobante SueldoClaro',
+                text: '¡Hola! Acabo de generar mi reporte de balance oficial en SueldoClaro. Podés ver el detalle ingresando acá: ' + window.location.href
+            })
+            .then(() => console.log('Compartido con éxito'))
+            .catch((err) => ejecutarDescargaAlternativa(canvas));
+        } else {
+            ejecutarDescargaAlternativa(canvas);
         }
+    });
+}
+
+function ejecutarDescargaAlternativa(canvas) {
+    const enlaceDescarga = document.createElement('a');
+    enlaceDescarga.download = 'Comprobante_SueldoClaro.png';
+    enlaceDescarga.href = canvas.toDataURL('image/png');
+    enlaceDescarga.click();
+}
 
         function ejecutarDescargaAlternativa(canvas) {
             const enlaceDescarga = document.createElement('a');
