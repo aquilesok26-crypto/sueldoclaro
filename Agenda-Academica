@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agenda Académica - Control de Parciales</title>
+    <style>
+        :root {
+            /* Paleta de colores basada en Cian */
+            --bg-principal: #0f2027; /* Fondo oscuro con tinte cian profundo */
+            --bg-tarjeta: #1a3644;    /* Tarjetas cian oscuro */
+            --texto: #e6f7ff;         /* Texto claro tirando a cian */
+            --texto-secundario: #90cdde; /* Texto secundario cian suave */
+            --primario: #00bcd4;      /* Cian brillante para botones principales */
+            --primario-hover: #0097a7;/* Cian más oscuro para el hover */
+            --exito: #00e5ff;         /* Cian eléctrico para aprobados y guardados */
+            --alerta: #ff5252;        /* Rojo suave para alertas/borrar */
+            --dia-comun: #244a5e;     /* Color para los días del calendario */
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg-principal); color: var(--texto); padding: 20px; }
+        
+        /* Título de la App */
+        .app-title { text-align: center; margin-bottom: 25px; color: var(--primario); font-size: 2.2rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+        
+        .container { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 20px; }
+        @media (min-width: 768px) { .container { grid-template-columns: 1.2fr 0.8fr; } .full-width { grid-column: span 2; } }
+
+        .card { background-color: var(--bg-tarjeta); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.3); border: 1px solid #224d61; }
+        h2 { margin-bottom: 15px; border-bottom: 2px solid #224d61; padding-bottom: 5px; font-size: 1.4rem; color: var(--primario); }
+
+        /* Estilos del Calendario */
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .cal-header button { background: var(--primario); color: #0f2027; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .cal-header button:hover { background: var(--primario-hover); color: white; }
+        .dias-semana { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-weight: bold; color: var(--texto-secundario); margin-bottom: 5px; }
+        .matriz-dias { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .dia { aspect-ratio: 1; background: var(--dia-comun); display: flex; flex-direction: column; justify-content: space-between; padding: 5px; border-radius: 6px; cursor: pointer; position: relative; font-size: 0.9rem; transition: background 0.2s; border: 1px solid #2d5d75; }
+        .dia:hover { background: #2f617a; }
+        .dia.vacio { background: transparent; cursor: default; border: none; }
+        .dia.hoy { border: 2px solid var(--exito); box-shadow: 0 0 8px var(--exito); }
+        .evento-dot { width: 8px; height: 8px; background: var(--alerta); border-radius: 50%; margin: 0 auto 4px auto; }
+
+        /* Estilos de la Agenda */
+        .input-group { margin-bottom: 12px; display: flex; flex-direction: column; gap: 5px; }
+        .input-group label { color: var(--texto-secundario); font-size: 0.85rem; }
+        input, select { padding: 8px; border-radius: 6px; border: 1px solid #2d5d75; background: var(--dia-comun); color: white; }
+        input:focus { outline: none; border-color: var(--primario); }
+        button.btn-block { width: 100%; background: var(--exito); color: #0f2027; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 10px; font-size: 1rem; transition: opacity 0.2s; }
+        button.btn-block:hover { opacity: 0.9; }
+        .lista-eventos { margin-top: 15px; max-height: 200px; overflow-y: auto; }
+        .item-evento { background: var(--dia-comun); padding: 10px; border-radius: 6px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid #2d5d75; }
+        .item-evento button { background: var(--alerta); border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; }
+
+        /* Estilos de la Tabla de Materias */
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; margin-top: 10px; }
+        th, td { padding: 12px; border-bottom: 1px solid #224d61; }
+        th { color: var(--texto-secundario); font-size: 0.9rem; }
+        .materia-input { width: 100%; background: transparent; border: none; border-bottom: 1px dashed #2d5d75; color: white; padding: 4px; font-size: 1rem; }
+        .materia-input:focus { border-bottom-color: var(--primario); outline: none; }
+        .chk-container { display: flex; flex-direction: column; align-items: center; font-size: 0.75rem; gap: 2px; }
+        input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--primario); cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<h1 class="app-title">Agenda Académica</h1>
+
+<div class="container">
+    
+    <div class="card">
+        <div class="cal-header">
+            <button onclick="cambiarMes(-1)">◀ Ant</button>
+            <h2 id="mes-año-titulo">Mayo 2026</h2>
+            <button onclick="cambiarMes(1)">Sig ▶</button>
+        </div>
+        <div class="dias-semana">
+            <div>Do</div><div>Lu</div><div>Ma</div><div>Mi</div><div>Ju</div><div>Vi</div><div>Sá</div>
+        </div>
+        <div class="matriz-dias" id="calendario-dias"></div>
+    </div>
+
+    <div class="card">
+        <h2>Agendar / Modificar Parcial</h2>
+        <div class="input-group">
+            <label>Fecha Seleccionada:</label>
+            <input type="date" id="fecha-parcial" readonly>
+        </div>
+        <div class="input-group">
+            <label>Materia / Detalle:</label>
+            <input type="text" id="nombre-parcial" placeholder="Ej: Álgebra - Parcial 1">
+        </div>
+        <button class="btn-block" onclick="guardarParcial()">Guardar Parcial</button>
+        
+        <h3 style="margin-top:20px; font-size:1.1rem; color: var(--texto-secundario);">Próximos Parciales:</h3>
+        <div class="lista-eventos" id="lista-eventos"></div>
+    </div>
+
+    <div class="card full-width">
+        <h2>Mis Materias y Parciales (Aprobado/Regular)</h2>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Materia</th>
+                        <th style="text-align: center;">Parcial 1</th>
+                        <th style="text-align: center;">Parcial 2</th>
+                        <th style="text-align: center;">Parcial 3</th>
+                        <th style="text-align: center;">Extraordinario</th>
+                    </tr>
+                </thead>
+                <tbody id="tabla-materias-cuerpo">
+                    </tbody>
+            </table>
+        </div>
+        <button onclick="agregarFilaMateria()" style="margin-top: 15px; background: var(--primario); color: #0f2027; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-weight: bold;">+ Agregar Materia</button>
+    </div>
+</div>
+
+<script>
+    // --- VARIABLES GLOBALES Y DATOS ---
+    let fechaActual = new Date();
+    let parciales = JSON.parse(localStorage.getItem('parciales')) || {};
+    let materias = JSON.parse(localStorage.getItem('materias')) || [
+        { name: '', p1: false, p2: false, p3: false, ext: false }
+    ];
+
+    const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+
+    // --- INICIALIZACIÓN ---
+    document.addEventListener("DOMContentLoaded", () => {
+        renderizarCalendario();
+        renderizarListaParciales();
+        renderizarMaterias();
+        solicitarPermisoNotificaciones();
+        revisarNotificacionesAnticipadas();
+    });
+
+    // --- LÓGICA DEL CALENDARIO ---
+    function renderizarCalendario() {
+        const año = fechaActual.getFullYear();
+        const mes = fechaActual.getMonth();
+        
+        document.getElementById("mes-año-titulo").innerText = `${meses[mes]} ${año}`;
+        
+        const primerDiaMes = new Date(año, mes, 1).getDay();
+        const totalDiasMes = new Date(año, mes + 1, 0).getDate();
+        
+        const contenedor = document.getElementById("calendario-dias");
+        contenedor.innerHTML = "";
+
+        for (let i = 0; i < primerDiaMes; i++) {
+            const divVacio = document.createElement("div");
+            divVacio.classList.add("dia", "vacio");
+            contenedor.appendChild(divVacio);
+        }
+
+        for (let dia = 1; dia <= totalDiasMes; dia++) {
+            const divDia = document.createElement("div");
+            divDia.classList.add("dia");
+            divDia.innerText = dia;
+
+            const mesFormateado = String(mes + 1).padStart(2, '0');
+            const diaFormateado = String(dia).padStart(2, '0');
+            const fechaKey = `${año}-${mesFormateado}-${diaFormateado}`;
+
+            const hoy = new Date();
+            if (dia === hoy.getDate() && mes === hoy.getMonth() && año === hoy.getFullYear()) {
+                divDia.classList.add("hoy");
+            }
+
+            if (parciales[fechaKey]) {
+                const dot = document.createElement("div");
+                dot.classList.add("evento-dot");
+                divDia.appendChild(dot);
+            }
+
+            divDia.onclick = () => seleccionarFecha(fechaKey);
+            contenedor.appendChild(divDia);
+        }
+    }
+
+    function cambiarMes(direccion) {
+        fechaActual.setMonth(fechaActual.getMonth() + direccion);
+        renderizarCalendario();
+    }
+
+    function seleccionarFecha(fechaStr) {
+        document.getElementById("fecha-parcial").value = fechaStr;
+        document.getElementById("nombre-parcial").value = parciales[fechaStr] || "";
+    }
+
+    // --- GESTIÓN DE PARCIALES ---
+    function guardarParcial() {
+        const fecha = document.getElementById("fecha-parcial").value;
+        const nombre = document.getElementById("nombre-parcial").value.trim();
+
+        if (!fecha) {
+            alert("Por favor, selecciona un día del calendario primero.");
+            return;
+        }
+
+        if (nombre === "") {
+            delete parciales[fecha];
+        } else {
+            parciales[fecha] = nombre;
+        }
+
+        localStorage.setItem('parciales', JSON.stringify(parciales));
+        renderizarCalendario();
+        renderizarListaParciales();
+        revisarNotificacionesAnticipadas();
+        
+        document.getElementById("fecha-parcial").value = "";
+        document.getElementById("nombre-parcial").value = "";
+        alert("Agenda actualizada correctamente.");
+    }
+
+    function borrarParcial(fecha) {
+        if(confirm(`¿Seguro querés borrar el parcial del ${fecha}?`)) {
+            delete parciales[fecha];
+            localStorage.setItem('parciales', JSON.stringify(parciales));
+            renderizarCalendario();
+            renderizarListaParciales();
+        }
+    }
+
+    function renderizarListaParciales() {
+        const lista = document.getElementById("lista-eventos");
+        lista.innerHTML = "";
+        
+        const fechasOrdenadas = Object.keys(parciales).sort();
+
+        fechasOrdenadas.forEach(fecha => {
+            const item = document.createElement("div");
+            item.classList.add("item-evento");
+            item.innerHTML = `
+                <div>
+                    <strong style="color:var(--primario);">${fecha}</strong>: ${parciales[fecha]}
+                </div>
+                <div>
+                    <button onclick="seleccionarFecha('${fecha}')" style="background:var(--primario); color:#0f2027; margin-right:5px; font-weight:bold;">Editar</button>
+                    <button onclick="borrarParcial('${fecha}')">X</button>
+                </div>
+            `;
+            lista.appendChild(item);
+        });
+    }
+
+    // --- TABLA DE MATERIAS ---
+    function renderizarMaterias() {
+        const cuerpo = document.getElementById("tabla-materias-cuerpo");
+        cuerpo.innerHTML = "";
+
+        materias.forEach((materia, index) => {
+            const fila = document.createElement("tr");
+            fila.innerHTML = `
+                <td>
+                    <input type="text" class="materia-input" value="${materia.name}" placeholder="Nombre de la materia..." onchange="actualizarMateria(${index}, 'name', this.value)">
+                </td>
+                <td align="center">
+                    <div class="chk-container"><input type="checkbox" ${materia.p1 ? 'checked' : ''} onchange="actualizarMateria(${index}, 'p1', this.checked)"></div>
+                </td>
+                <td align="center">
+                    <div class="chk-container"><input type="checkbox" ${materia.p2 ? 'checked' : ''} onchange="actualizarMateria(${index}, 'p2', this.checked)"></div>
+                </td>
+                <td align="center">
+                    <div class="chk-container"><input type="checkbox" ${materia.p3 ? 'checked' : ''} onchange="actualizarMateria(${index}, 'p3', this.checked)"></div>
+                </td>
+                <td align="center">
+                    <div class="chk-container"><input type="checkbox" ${materia.ext ? 'checked' : ''} onchange="actualizarMateria(${index}, 'ext', this.checked)"></div>
+                </td>
+            `;
+            cuerpo.appendChild(fila);
+        });
+    }
+
+    function agregarFilaMateria() {
+        materias.push({ name: '', p1: false, p2: false, p3: false, ext: false });
+        renderizarMaterias();
+        localStorage.setItem('materias', JSON.stringify(materias));
+    }
+
+    // --- NOTIFICACIONES ---
+    function solicitarPermisoNotificaciones() {
+        if ("Notification" in window) {
+            if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+                Notification.requestPermission();
+            }
+        }
+    }
+
+    function revisarNotificacionesAnticipadas() {
+        if (!("Notification" in window) || Notification.permission !== "granted") return;
+
+        const mañana = new Date();
+        mañana.setDate(mañana.getDate() + 1);
+        
+        const año = mañana.getFullYear();
+        const mes = String(mañana.getMonth() + 1).padStart(2, '0');
+        const dia = String(mañana.getDate()).padStart(2, '0');
+        const fechaMañanaKey = `${año}-${mes}-${dia}`;
+
+        if (parciales[fechaMañanaKey]) {
+            const ultimaAlerta = localStorage.getItem('ultima_alerta_fecha');
+            if (ultimaAlerta !== fechaMañanaKey) {
+                new Notification("Agenda Académica: ¡Parcial Mañana!", {
+                    body: `Recordatorio: Mañana rendís "${parciales[fechaMañanaKey]}". ¡A meterle pata al estudio!`,
+                    icon: 'https://cdn-icons-png.flaticon.com/512/2693/2693507.png'
+                });
+                localStorage.setItem('ultima_alerta_fecha', fechaMañanaKey);
+            }
+        }
+    }
+</script>
+</body>
+</html>
