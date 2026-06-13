@@ -236,7 +236,7 @@
 </div>
 
 <script>
-    // Función para poner comas en los miles y puntos en los decimales de forma limpia
+    // Función para poner comas en los miles de forma limpia
     function formatearDinero(numero) {
         return numero.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
@@ -297,7 +297,7 @@
         mensajeTicket += `${lineaEspecial}\n`;
         mensajeTicket += `    🧾 *SUELDO CLARO* 🧾\n`;
         mensajeTicket += `${lineaEspecial}\n`;
-        mensajeTicket += `*Usuario:* {usuario}\n`;
+        mensajeTicket += `*Usuario:* ${usuario}\n`;
         mensajeTicket += `*Período:* ${mes} ${anio}\n`;
         mensajeTicket += `${lineaDivisoria}\n`;
         mensajeTicket += `💰 *INGRESOS:*\n`;
