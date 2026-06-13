@@ -1,186 +1,230 @@
-import tkinter as tk
-from tkinter import messagebox, ttk
-import urllib.parse
-import webbrowser
-import os
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sueldo Claro - Comprobante Directo</title>
+    <style>
+        :root {
+            --bg-principal: #121824;
+            --bg-tarjeta: #1e2640;
+            --primario: #ff4757;
+            --secundario: #2ed573;
+            --texto: #ffffff;
+            --texto-mutado: #a5b1c2;
+        }
 
-# Archivo de persistencia para que tus datos no colapsen ni se borren al cerrar
-ARCHIVO_DATOS = "datos_sueldo.txt"
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+        }
 
-def guardar_datos():
-    """Guarda automáticamente lo que escribís para la próxima vez."""
-    try:
-        with open(ARCHIVO_DATOS, "w", encoding="utf-8") as f:
-            f.write(f"{entry_usuario.get()}\n{entry_sueldo.get()}\n{entry_horas.get()}\n"
-                    f"{entry_alquiler.get()}\n{entry_tarjeta.get()}\n{entry_prestamo.get()}\n{entry_varios.get()}")
-    except:
-        pass
+        body {
+            background-color: var(--bg-principal);
+            color: var(--texto);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-def cargar_datos():
-    """Recupera la última información registrada al abrir la app."""
-    if os.path.exists(ARCHIVO_DATOS):
-        try:
-            with open(ARCHIVO_DATOS, "r", encoding="utf-8") as f:
-                lineas = f.readlines()
-                if len(lineas) >= 7:
-                    entry_usuario.insert(0, lineas[0].strip())
-                    entry_sueldo.insert(0, lineas[1].strip())
-                    entry_horas.insert(0, lineas[2].strip())
-                    entry_alquiler.insert(0, lineas[3].strip())
-                    entry_tarjeta.insert(0, lineas[4].strip())
-                    entry_prestamo.insert(0, lineas[5].strip())
-                    entry_varios.insert(0, lineas[6].strip())
-        except:
-            pass
+        .app-header {
+            text-align: center;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 480px;
+        }
 
-def calcular_y_enviar():
-    try:
-        guardar_datos()
+        .app-header h1 {
+            color: var(--primario);
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
 
-        usuario = entry_usuario.get().strip()
-        mes = combo_mes.get()
-        anio = combo_anio.get()
+        .card {
+            background-color: var(--bg-tarjeta);
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            margin-bottom: 15px;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            color: var(--texto-mutado);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            color: var(--texto-mutado);
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            background-color: #121824;
+            border: 2px solid #2d3748;
+            border-radius: 8px;
+            color: white;
+            font-size: 1.1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primario);
+        }
+
+        .resultado-box {
+            background-color: rgba(255, 71, 87, 0.1);
+            border: 1px dashed var(--primario);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .resultado-box .titulo {
+            font-size: 0.9rem;
+            color: var(--texto-mutado);
+            text-transform: uppercase;
+        }
+
+        .resultado-box .monto {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primario);
+            margin-top: 5px;
+        }
+
+        .btn-whatsapp {
+            width: 100%;
+            background-color: var(--secundario);
+            color: #121824;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            transition: opacity 0.2s;
+        }
+
+        .btn-whatsapp:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-header">
+    <h1>SueldoClaro <span>S</span></h1>
+</div>
+
+<div class="card">
+    <h2>4. Comprobante Oficial</h2>
+    
+    <div class="input-group">
+        <label>Nombre del Cliente:</label>
+        <input type="text" id="cliente-nombre" placeholder="Ej: Juan Pérez" oninput="calcularDebido()">
+    </div>
+
+    <div class="input-group">
+        <label>Monto Total ($):</label>
+        <input type="number" id="monto-total" placeholder="0.00" step="0.01" oninput="calcularDebido()">
+    </div>
+
+    <div class="input-group">
+        <label>Monto Entregado ($):</label>
+        <input type="number" id="monto-entregado" placeholder="0.00" step="0.01" oninput="calcularDebido()">
+    </div>
+
+    <div class="resultado-box">
+        <div class="titulo">Monto que quedó debiendo</div>
+        <div class="monto" id="monto-debido-txt">$0,00</div>
+    </div>
+
+    <button class="btn-whatsapp" onclick="enviarTicketWhatsApp()">
+        📩 Compartir Comprobante Directo
+    </button>
+</div>
+
+<script>
+    function calcularDebido() {
+        const total = parseFloat(document.getElementById('monto-total').value) || 0;
+        const entregado = parseFloat(document.getElementById('monto-entregado').value) || 0;
         
-        if not usuario:
-            messagebox.showerror("Faltan Datos", "Por favor, ingresá tu Nombre de Usuario.")
-            return
+        let debido = total - entregado;
+        if (debido < 0) debido = 0;
+
+        document.getElementById('monto-debido-txt').innerText = `$${debido.toFixed(2).replace('.', ',')}`;
+    }
+
+    function enviarTicketWhatsApp() {
+        const cliente = document.getElementById('cliente-nombre').value.trim() || "Cliente General";
+        const total = parseFloat(document.getElementById('monto-total').value) || 0;
+        const entregado = parseFloat(document.getElementById('monto-entregado').value) || 0;
         
-        # Procesamiento numérico con separadores óptimos
-        sueldo = float(entry_sueldo.get().replace(",", ".") or 0)
-        horas = float(entry_horas.get().replace(",", ".") or 0)
-        monto_horas = horas * (sueldo / 200) * 1.5
-        total_ingresos = sueldo + monto_horas
+        let debido = total - entregado;
+        if (debido < 0) debido = 0;
+
+        const hoy = new Date();
+        const fechaStr = `${String(hoy.getDate()).padStart(2, '0')}/${String(hoy.getMonth() + 1).padStart(2, '0')}/${hoy.getFullYear()}`;
+
+        // Construcción del Ticket de Texto Estilizado
+        const lineaEspecial = "━━━━━━━━━━━━━━━━━━━━";
+        const lineaDivisoria = "--------------------";
         
-        alquiler = float(entry_alquiler.get().replace(",", ".") or 0)
-        tarjeta = float(entry_tarjeta.get().replace(",", ".") or 0)
-        prestamo = float(entry_prestamo.get().replace(",", ".") or 0)
-        varios = float(entry_varios.get().replace(",", ".") or 0)
-        total_gastos = alquiler + tarjeta + prestamo + varios
+        let mensajeTicket = "";
+        mensajeTicket += `${lineaEspecial}\n`;
+        mensajeTicket += `   🧾 *SUELDO CLARO* 🧾\n`;
+        mensajeTicket += `${lineaEspecial}\n`;
+        mensajeTicket += `*Fecha:* ${fechaStr}\n`;
+        mensajeTicket += `*Cliente:* ${cliente}\n`;
+        mensajeTicket += `${lineaDivisoria}\n`;
+        mensajeTicket += `*Monto Total:* $${total.toFixed(2).replace('.', ',')}\n`;
+        mensajeTicket += `*Entrega:* $${entregado.toFixed(2).replace('.', ',')}\n`;
+        mensajeTicket += `${lineaDivisoria}\n`;
         
-        saldo = total_ingresos - total_gastos
+        if (debido > 0) {
+            mensajeTicket += `🔴 *QUEDÓ DEBIENDO:* $${debido.toFixed(2).replace('.', ',')}\n`;
+        } else {
+            mensajeTicket += `🟢 *CUENTA SALDADA*\n`;
+        }
         
-        # Definición de estados con Emojis de Color para WhatsApp
-        if saldo < 0:
-            estado_ticket = f"🔴 *ESTADO:* QUEDÓ DEBIENDO: ${abs(saldo):,.2f}"
-        else:
-            estado_ticket = f"🟢 *ESTADO:* SALDO A FAVOR: ${saldo:,.2f}"
-            
-        # Armado estructural del ticket
-        ticket = (
-            f"=== 📄 TICKET DE SUELDO CLARO ===\n"
-            f"👤 *Usuario:* {usuario}\n"
-            f"📅 *Período:* {mes} {anio}\n"
-            f"----------------------------\n"
-            f"💰 *INGRESOS:*\n"
-            f"• Sueldo Base: ${sueldo:,.2f}\n"
-            f"• Horas Extra: ${monto_horas:,.2f} ({horas} hs)\n"
-            f"▶ *TOTAL INGRESO:* ${total_ingresos:,.2f}\n"
-            f"----------------------------\n"
-            f"📉 *DETALLE DE GASTOS:*\n"
-            f"• Alquiler: ${alquiler:,.2f}\n"
-            f"• Tarjetas: ${tarjeta:,.2f}\n"
-            f"• Préstamos: ${prestamo:,.2f}\n"
-            f"• Varios/Otros: ${varios:,.2f}\n"
-            f"▶ *TOTAL GASTADO:* ${total_gastos:,.2f}\n"
-            f"----------------------------\n"
-            f"{estado_ticket}\n"
-            f"============================"
-        )
+        mensajeTicket += `${lineaEspecial}\n`;
+        mensajeTicket += `  ¡Gracias por su confianza!\n`;
+        mensajeTicket += `${lineaEspecial}`;
+
+        // Codificación universal segura para WhatsApp Link
+        const mensajeCodificado = encodeURIComponent(mensajeTicket);
+        const urlWhatsApp = `https://api.whatsapp.com/send?text=${mensajeCodificado}`;
         
-        # Redirección automatizada
-        url = f"https://api.whatsapp.com/send?text={urllib.parse.quote(ticket)}"
-        webbrowser.open(url)
-        
-    except ValueError:
-        messagebox.showerror("Error de Formato", "Por favor, asegurate de ingresar solo números en los montos.")
+        // Abre WhatsApp de una, saltando los bloqueos del celular
+        window.open(urlWhatsApp, '_blank');
+    }
+</script>
 
-# --- DISEÑO DE LA INTERFAZ GRÁFICA (Estilo Azul Claro) ---
-root = tk.Tk()
-root.title("Sueldo Claro Full Pro")
-root.geometry("420x680")
-root.configure(bg="#0056b3") # Fondo azul oscuro de base estructural
-
-# Paleta de colores aplicada a la interfaz
-COLOR_FONDO_AZUL = "#1a73e8"  # Fondo azul claro vibrante
-COLOR_TEXTO_BLANCO = "#ffffff"
-COLOR_CUADRO_BLANCO = "#ffffff"
-
-# Contenedor principal con soporte de desplazamiento (Scroll)
-canvas = tk.Canvas(root, bg=COLOR_FONDO_AZUL, highlightthickness=0)
-scrollbar = tk.Scrollbar(root, orient="vertical", command=canvas.yview)
-frame = tk.Frame(canvas, bg=COLOR_FONDO_AZUL, padx=25, pady=20)
-
-frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
-canvas.create_window((0, 0), window=frame, anchor="nw")
-canvas.configure(yscrollcommand=scrollbar.set)
-
-# --- ELEMENTOS VISUALES ---
-
-# Bloque Usuario y Fecha
-tk.Label(frame, text="👤 Nombre de Usuario:", bg=COLOR_FONDO_AZUL, fg=COLOR_TEXTO_BLANCO, font=("Arial", 10, "bold")).pack(anchor="w", pady=(5,0))
-entry_usuario = tk.Entry(frame, bg=COLOR_CUADRO_BLANCO, fg="black", insertbackground="black", font=("Arial", 11))
-entry_usuario.pack(fill="x", pady=5)
-
-tk.Label(frame, text="📅 Mes Correspondiente:", bg=COLOR_FONDO_AZUL, fg=COLOR_TEXTO_BLANCO, font=("Arial", 10, "bold")).pack(anchor="w")
-combo_mes = ttk.Combobox(frame, values=["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"], state="readonly", font=("Arial", 10))
-combo_mes.set("Junio")
-combo_mes.pack(fill="x", pady=5)
-
-tk.Label(frame, text="📆 Año:", bg=COLOR_FONDO_AZUL, fg=COLOR_TEXTO_BLANCO, font=("Arial", 10, "bold")).pack(anchor="w")
-combo_anio = ttk.Combobox(frame, values=["2025", "2026", "2027", "2028"], state="readonly", font=("Arial", 10))
-combo_anio.set("2026")
-combo_anio.pack(fill="x", pady=5)
-
-# Línea divisoria visual
-tk.Frame(frame, height=2, bg="#ffffff").pack(fill="x", pady=15)
-
-# Formulario de Carga Dinámica con Emojis
-campos_config = [
-    ("💰 Sueldo Base ($):", "entry_sueldo"),
-    ("⚡ Cantidad Horas Extra:", "entry_horas"),
-    ("🏠 Gasto Alquiler ($):", "entry_alquiler"),
-    ("💳 Gasto Tarjetas ($):", "entry_tarjeta"),
-    ("🏛️ Gasto Préstamos ($):", "entry_prestamo"),
-    ("🛒 Otros Gastos / Varios ($):", "entry_varios")
-]
-
-entries_dict = {}
-
-for label_txt, var_name in campos_config:
-    tk.Label(frame, text=label_txt, bg=COLOR_FONDO_AZUL, fg=COLOR_TEXTO_BLANCO, font=("Arial", 10, "bold")).pack(anchor="w", pady=(4,0))
-    # Cuadros blancos limpios con texto negro legible
-    e = tk.Entry(frame, bg=COLOR_CUADRO_BLANCO, fg="black", insertbackground="black", font=("Arial", 11))
-    e.pack(fill="x", pady=4)
-    entries_dict[var_name] = e
-
-# Mapeo de variables individuales para mantener compatibilidad
-entry_sueldo = entries_dict["entry_sueldo"]
-entry_horas = entries_dict["entry_horas"]
-entry_alquiler = entries_dict["entry_alquiler"]
-entry_tarjeta = entries_dict["entry_tarjeta"]
-entry_prestamo = entries_dict["entry_prestamo"]
-entry_varios = entries_dict["entry_varios"]
-
-# Botón de Acción Principal (Verde WhatsApp Estilo Fluido)
-btn_enviar = tk.Button(
-    frame, 
-    text="🚀 ENVIAR TICKET A WHATSAPP", 
-    bg="#25D366", 
-    fg="white", 
-    font=("Arial", 11, "bold"), 
-    activebackground="#20ba5a", 
-    activeforeground="white",
-    command=calcular_y_enviar,
-    relief="flat",
-    pady=8
-)
-btn_enviar.pack(pady=25, fill="x")
-
-# Carga inicial del estado guardado
-cargar_datos()
-
-# Empaquetado final del sistema de scroll
-canvas.pack(side="left", fill="both", expand=True)
-scrollbar.pack(side="right", fill="y")
-
-root.mainloop()
+</body>
+</html>
