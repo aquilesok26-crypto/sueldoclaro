@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sueldo Claro - Comprobante Directo</title>
+    <title>Sueldo Claro - Control Total</title>
     <style>
         :root {
             --bg-principal: #121824;
@@ -38,7 +38,7 @@
         }
 
         .app-header h1 {
-            color: var(--primario);
+            color: #1e73e8; /* Azul claro para el logo */
             font-size: 1.8rem;
             display: flex;
             align-items: center;
@@ -64,8 +64,15 @@
             letter-spacing: 0.5px;
         }
 
+        .row-fecha {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
         .input-group {
             margin-bottom: 15px;
+            width: 100%;
         }
 
         .input-group label {
@@ -75,7 +82,7 @@
             color: var(--texto-mutado);
         }
 
-        .input-group input {
+        .input-group input, .input-group select {
             width: 100%;
             padding: 12px;
             background-color: #121824;
@@ -87,17 +94,23 @@
             transition: border-color 0.2s;
         }
 
-        .input-group input:focus {
-            border-color: var(--primario);
+        .input-group input:focus, .input-group select:focus {
+            border-color: #1e73e8;
         }
 
         .resultado-box {
-            background-color: rgba(255, 71, 87, 0.1);
-            border: 1px dashed var(--primario);
+            background-color: rgba(46, 213, 115, 0.1);
+            border: 2px dashed var(--secundario);
             border-radius: 12px;
             padding: 15px;
             text-align: center;
             margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .resultado-box.deuda {
+            background-color: rgba(255, 71, 87, 0.1);
+            border-color: var(--primario);
         }
 
         .resultado-box .titulo {
@@ -109,8 +122,12 @@
         .resultado-box .monto {
             font-size: 2rem;
             font-weight: bold;
-            color: var(--primario);
+            color: var(--secundario);
             margin-top: 5px;
+        }
+
+        .resultado-box.deuda .monto {
+            color: var(--primario);
         }
 
         .btn-whatsapp {
@@ -139,89 +156,176 @@
 <body>
 
 <div class="app-header">
-    <h1>SueldoClaro <span>S</span></h1>
+    <h1>SueldoClaro 📊</h1>
 </div>
 
 <div class="card">
-    <h2>4. Comprobante Oficial</h2>
+    <h2>Control de Sueldo y Gastos</h2>
     
     <div class="input-group">
-        <label>Nombre del Cliente:</label>
-        <input type="text" id="cliente-nombre" placeholder="Ej: Juan Pérez" oninput="calcularDebido()">
+        <label>👤 Nombre de Usuario:</label>
+        <input type="text" id="usuario-nombre" placeholder="Ej: Aquiles" oninput="calcularTodo()">
+    </div>
+
+    <div class="row-fecha">
+        <div class="input-group">
+            <label>📅 Mes:</label>
+            <select id="select-mes" onchange="calcularTodo()">
+                <option value="Enero">Enero</option>
+                <option value="Febrero">Febrero</option>
+                <option value="Marzo">Marzo</option>
+                <option value="Abril">Abril</option>
+                <option value="Mayo">Mayo</option>
+                <option value="Junio" selected>Junio</option>
+                <option value="Julio">Julio</option>
+                <option value="Agosto">Agosto</option>
+                <option value="Septiembre">Septiembre</option>
+                <option value="Octubre">Octubre</option>
+                <option value="Noviembre">Noviembre</option>
+                <option value="Diciembre">Diciembre</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>📆 Año:</label>
+            <select id="select-anio" onchange="calcularTodo()">
+                <option value="2025">2025</option>
+                <option value="2026" selected>2026</option>
+                <option value="2027">2027</option>
+            </select>
+        </div>
     </div>
 
     <div class="input-group">
-        <label>Monto Total ($):</label>
-        <input type="number" id="monto-total" placeholder="0.00" step="0.01" oninput="calcularDebido()">
+        <label>💰 Sueldo Base ($):</label>
+        <input type="number" id="sueldo-base" placeholder="0.00" step="0.01" oninput="calcularTodo()">
     </div>
 
     <div class="input-group">
-        <label>Monto Entregado ($):</label>
-        <input type="number" id="monto-entregado" placeholder="0.00" step="0.01" oninput="calcularDebido()">
+        <label>⚡ Horas Extra (Cantidad):</label>
+        <input type="number" id="horas-extra" placeholder="0" oninput="calcularTodo()">
     </div>
 
-    <div class="resultado-box">
-        <div class="titulo">Monto que quedó debiendo</div>
-        <div class="monto" id="monto-debido-txt">$0,00</div>
+    <div class="input-group">
+        <label>🏠 Gasto Alquiler ($):</label>
+        <input type="number" id="gasto-alquiler" placeholder="0.00" step="0.01" oninput="calcularTodo()">
+    </div>
+
+    <div class="input-group">
+        <label>💳 Gasto Tarjetas ($):</label>
+        <input type="number" id="gasto-tarjeta" placeholder="0.00" step="0.01" oninput="calcularTodo()">
+    </div>
+
+    <div class="input-group">
+        <label>🏛️ Gasto Préstamos ($):</label>
+        <input type="number" id="gasto-prestamo" placeholder="0.00" step="0.01" oninput="calcularTodo()">
+    </div>
+
+    <div class="input-group">
+        <label>🛒 Otros Gastos / Varios ($):</label>
+        <input type="number" id="gasto-varios" placeholder="0.00" step="0.01" oninput="calcularTodo()">
+    </div>
+
+    <div id="resultado-contenedor" class="resultado-box">
+        <div id="resultado-titulo" class="titulo">Balance de Cuenta</div>
+        <div class="monto" id="balance-txt">$0,00</div>
     </div>
 
     <button class="btn-whatsapp" onclick="enviarTicketWhatsApp()">
-        📩 Compartir Comprobante Directo
+        🚀 Generar y Enviar Comprobante Directo
     </button>
 </div>
 
 <script>
-    function calcularDebido() {
-        const total = parseFloat(document.getElementById('monto-total').value) || 0;
-        const entregado = parseFloat(document.getElementById('monto-entregado').value) || 0;
-        
-        let debido = total - entregado;
-        if (debido < 0) debido = 0;
+    // Función para poner comas en los miles de forma limpia
+    function formatearDinero(numero) {
+        return numero.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
 
-        document.getElementById('monto-debido-txt').innerText = `$${debido.toFixed(2).replace('.', ',')}`;
+    function calcularTodo() {
+        const sueldo = parseFloat(document.getElementById('sueldo-base').value) || 0;
+        const horas = parseFloat(document.getElementById('horas-extra').value) || 0;
+        
+        const alquiler = parseFloat(document.getElementById('gasto-alquiler').value) || 0;
+        const tarjeta = parseFloat(document.getElementById('gasto-tarjeta').value) || 0;
+        const prestamo = parseFloat(document.getElementById('gasto-prestamo').value) || 0;
+        const varios = parseFloat(document.getElementById('gasto-varios').value) || 0;
+
+        // Cálculos de ingresos y egresos
+        const montoHoras = horas * (sueldo / 200) * 1.5;
+        const totalIngresos = sueldo + montoHoras;
+        const totalGastos = alquiler + tarjeta + prestamo + varios;
+        
+        const saldoFinal = totalIngresos - totalGastos;
+        
+        const contenedor = document.getElementById('resultado-contenedor');
+        const titulo = document.getElementById('resultado-titulo');
+        const montoTxt = document.getElementById('balance-txt');
+
+        if (saldoFinal < 0) {
+            contenedor.classList.add('deuda');
+            titulo.innerText = "Monto que quedó debiendo 🔴";
+            montoTxt.innerText = `$${formatearDinero(Math.abs(saldoFinal))}`;
+        } else {
+            contenedor.classList.remove('deuda');
+            titulo.innerText = "Saldo Neto Restante 🟢";
+            montoTxt.innerText = `$${formatearDinero(saldoFinal)}`;
+        }
     }
 
     function enviarTicketWhatsApp() {
-        const cliente = document.getElementById('cliente-nombre').value.trim() || "Cliente General";
-        const total = parseFloat(document.getElementById('monto-total').value) || 0;
-        const entregado = parseFloat(document.getElementById('monto-entregado').value) || 0;
-        
-        let debido = total - entregado;
-        if (debido < 0) debido = 0;
+        const usuario = document.getElementById('usuario-nombre').value.trim() || "Usuario General";
+        const mes = document.getElementById('select-mes').value;
+        const anio = document.getElementById('select-anio').value;
 
-        const hoy = new Date();
-        const fechaStr = `${String(hoy.getDate()).padStart(2, '0')}/${String(hoy.getMonth() + 1).padStart(2, '0')}/${hoy.getFullYear()}`;
+        const sueldo = parseFloat(document.getElementById('sueldo-base').value) || 0;
+        const horas = parseFloat(document.getElementById('horas-extra').value) || 0;
+        const montoHoras = horas * (sueldo / 200) * 1.5;
+        const totalIngresos = sueldo + montoHoras;
 
-        // Construcción del Ticket de Texto Estilizado
+        const alquiler = parseFloat(document.getElementById('gasto-alquiler').value) || 0;
+        const tarjeta = parseFloat(document.getElementById('gasto-tarjeta').value) || 0;
+        const prestamo = parseFloat(document.getElementById('gasto-prestamo').value) || 0;
+        const varios = parseFloat(document.getElementById('gasto-varios').value) || 0;
+        const totalGastos = alquiler + tarjeta + prestamo + varios;
+
+        const saldoFinal = totalIngresos - totalGastos;
+
         const lineaEspecial = "━━━━━━━━━━━━━━━━━━━━";
         const lineaDivisoria = "--------------------";
         
         let mensajeTicket = "";
         mensajeTicket += `${lineaEspecial}\n`;
-        mensajeTicket += `   🧾 *SUELDO CLARO* 🧾\n`;
+        mensajeTicket += `    🧾 *SUELDO CLARO* 🧾\n`;
         mensajeTicket += `${lineaEspecial}\n`;
-        mensajeTicket += `*Fecha:* ${fechaStr}\n`;
-        mensajeTicket += `*Cliente:* ${cliente}\n`;
+        mensajeTicket += `*Usuario:* ${usuario}\n`;
+        mensajeTicket += `*Período:* ${mes} ${anio}\n`;
         mensajeTicket += `${lineaDivisoria}\n`;
-        mensajeTicket += `*Monto Total:* $${total.toFixed(2).replace('.', ',')}\n`;
-        mensajeTicket += `*Entrega:* $${entregado.toFixed(2).replace('.', ',')}\n`;
+        mensajeTicket += `💰 *INGRESOS:*\n`;
+        mensajeTicket += `• Sueldo Base: $${formatearDinero(sueldo)}\n`;
+        mensajeTicket += `• Horas Extra: $${formatearDinero(montoHoras)} (${horas} hs)\n`;
+        mensajeTicket += `▶ *Total Ingresos:* $${formatearDinero(totalIngresos)}\n`;
+        mensajeTicket += `${lineaDivisoria}\n`;
+        mensajeTicket += `📉 *DETALLE DE GASTOS:*\n`;
+        mensajeTicket += `• Alquiler: $${formatearDinero(alquiler)}\n`;
+        mensajeTicket += `• Tarjeta: $${formatearDinero(tarjeta)}\n`;
+        mensajeTicket += `• Préstamos: $${formatearDinero(prestamo)}\n`;
+        mensajeTicket += `• Varios: $${formatearDinero(varios)}\n`;
+        mensajeTicket += `▶ *Total Gastado:* $${formatearDinero(totalGastos)}\n`;
         mensajeTicket += `${lineaDivisoria}\n`;
         
-        if (debido > 0) {
-            mensajeTicket += `🔴 *QUEDÓ DEBIENDO:* $${debido.toFixed(2).replace('.', ',')}\n`;
+        if (saldoFinal < 0) {
+            mensajeTicket += `🔴 *QUEDÓ DEBIENDO:* $${formatearDinero(Math.abs(saldoFinal))}\n`;
         } else {
-            mensajeTicket += `🟢 *CUENTA SALDADA*\n`;
+            mensajeTicket += `🟢 *SALDO A FAVOR:* $${formatearDinero(saldoFinal)}\n`;
         }
         
         mensajeTicket += `${lineaEspecial}\n`;
-        mensajeTicket += `  ¡Gracias por su confianza!\n`;
+        mensajeTicket += `  _Generado por Sueldo Claro App_\n`;
         mensajeTicket += `${lineaEspecial}`;
 
-        // Codificación universal segura para WhatsApp Link
         const mensajeCodificado = encodeURIComponent(mensajeTicket);
         const urlWhatsApp = `https://api.whatsapp.com/send?text=${mensajeCodificado}`;
         
-        // Abre WhatsApp de una, saltando los bloqueos del celular
         window.open(urlWhatsApp, '_blank');
     }
 </script>
