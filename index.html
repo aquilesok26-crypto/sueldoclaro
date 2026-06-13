@@ -9,67 +9,25 @@
             --azul-marino: #0a1128;
             --tarjeta: #121c3d;
             --texto-claro: #ffffff;
-            --gris-sutil: #a0a0a0;
             --rojo-intenso: #d32f2f;
             --verde-intenso: #2e7d32;
         }
 
-        body {
-            background-color: var(--azul-marino);
-            font-family: Arial, sans-serif;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 450px;
-            background-color: var(--tarjeta);
-            padding: 25px;
-            border-radius: 15px;
-            color: var(--texto-claro);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
+        body { background-color: var(--azul-marino); font-family: Arial, sans-serif; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 450px; background-color: var(--tarjeta); padding: 25px; border-radius: 15px; color: var(--texto-claro); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
         h1 { text-align: center; margin-bottom: 25px; font-size: 24px; letter-spacing: 1px; }
-
         .section { margin-bottom: 20px; }
-        .section-label { font-weight: bold; font-size: 14px; margin-bottom: 8px; display: block; color: #cbd5e0; }
+        .section-label { font-size: 12px; color: #cbd5e0; margin-bottom: 4px; display: block; font-weight: bold; }
 
-        input, select {
-            width: 100%; padding: 10px; border-radius: 5px; border: none; margin-bottom: 10px; font-family: Arial, sans-serif;
-        }
+        input, select { width: 100%; padding: 12px; border-radius: 5px; border: none; margin-bottom: 12px; font-family: Arial; }
+        .btn-add { background-color: #3b82f6; color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; cursor: pointer; font-weight: bold; }
 
-        .flex { display: flex; gap: 10px; }
-        .btn-add { background-color: #3b82f6; color: white; border: none; padding: 10px; width: 100%; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .boleta { background-color: white; color: black; padding: 15px; border-radius: 5px; margin-bottom: 15px; }
+        .gasto-fila { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 6px 0; font-size: 14px; }
+        .btn-x { color: #ccc; cursor: pointer; font-weight: bold; }
 
-        /* Boleta de Gastos (Sección 4) */
-        .boleta {
-            background-color: white;
-            color: black;
-            padding: 15px;
-            border-radius: 5px;
-            min-height: 50px;
-        }
-        .gasto-fila {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid #eee;
-            padding: 5px 0;
-            font-size: 14px;
-        }
-        .btn-x { color: var(--gris-sutil); cursor: pointer; font-weight: bold; }
-
-        /* Cartel Resultados (Sección 5) */
-        .resultado {
-            padding: 20px;
-            text-align: center;
-            border-radius: 5px;
-            font-weight: bold;
-            font-size: 18px;
-            margin-top: 15px;
-        }
+        .resultado { padding: 20px; text-align: center; border-radius: 5px; font-weight: bold; font-size: 18px; margin-top: 15px; }
         .deuda { background-color: var(--rojo-intenso); }
         .favor { background-color: var(--verde-intenso); }
 
@@ -82,68 +40,87 @@
     <h1>SUELDO CLARO</h1>
 
     <div class="section">
-        <span class="section-label">1 DATOS OFICIALES</span>
-        <input type="text" id="nombre" placeholder="Nombre del usuario">
-        <input type="number" id="sueldo" placeholder="Sueldo declarado ($)" oninput="calc()">
+        <span class="section-label">NOMBRE DE USUARIO</span>
+        <input type="text" id="nombre" placeholder="Ej: Juan Pérez">
+        <span class="section-label">SUELDO A DECLARAR ($)</span>
+        <input type="number" id="sueldo" placeholder="0,00" oninput="calc()">
     </div>
 
     <div class="section">
-        <span class="section-label">2 FECHA</span>
-        <div class="flex">
-            <select id="mes" onchange="calc()"><option>Enero</option><option>Febrero</option><option>Marzo</option><option>Abril</option><option>Mayo</option><option selected>Junio</option><option>Julio</option><option>Agosto</option><option>Septiembre</option><option>Octubre</option><option>Noviembre</option><option>Diciembre</option></select>
-            <select id="anio" onchange="calc()"><option>2025</option><option selected>2026</option><option>2027</option></select>
-        </div>
+        <span class="section-label">MES</span>
+        <select id="mes"><option>Enero</option><option>Febrero</option><option>Marzo</option><option>Abril</option><option>Mayo</option><option selected>Junio</option><option>Julio</option><option>Agosto</option><option>Septiembre</option><option>Octubre</option><option>Noviembre</option><option>Diciembre</option></select>
+        <span class="section-label">AÑO</span>
+        <select id="anio"><option>2025</option><option selected>2026</option><option>2027</option></select>
     </div>
 
     <div class="section">
-        <span class="section-label">3 GASTOS A DECLARAR</span>
-        <input type="number" id="gastoMonto" placeholder="Cantidad ($)">
+        <span class="section-label">CANTIDAD ($)</span>
+        <input type="number" id="gastoMonto" placeholder="0,00">
+        <span class="section-label">TIPO DE GASTO</span>
         <select id="gastoTipo">
-            <option>Préstamos</option><option>Alquiler</option><option>Almacén</option><option>Gasto personal</option><option>Otros gastos</option>
+            <option>Préstamos</option><option>Alquiler</option><option>Almacén</option><option>Carnicería</option>
+            <option>Luz</option><option>Agua</option><option>Celular</option><option>Internet</option>
+            <option>Banco</option><option>Tarjeta</option><option>Gasto personal</option><option>Otros</option>
         </select>
-        <button class="btn-add" onclick="addGasto()">+ Añadir Gasto</button>
+        <button class="btn-add" onclick="addGasto()">+ AGREGAR GASTO</button>
     </div>
 
-    <div class="section">
-        <span class="section-label">4 DETALLES GASTOS</span>
-        <div class="boleta" id="listaGastos"></div>
-    </div>
+    <span class="section-label">DETALLES DE BOLETA</span>
+    <div class="boleta" id="listaGastos"></div>
 
-    <div id="resultadoCartel" class="resultado favor">Monto a favor: $<span id="resVal">0.00</span></div>
-
-    <button class="btn-share" onclick="compartir()">📩 Compartir ticket</button>
+    <div id="resultadoCartel" class="resultado favor">Saldo a favor: $<span id="resVal">0,00</span></div>
+    <button class="btn-share" onclick="compartir()">📩 COMPARTIR TICKET WHATSAPP</button>
 </div>
 
 <script>
     let gastos = [];
+    function fmt(n) { return n.toLocaleString('es-AR', {minimumFractionDigits: 2}); }
+
     function addGasto() {
         let m = parseFloat(document.getElementById('gastoMonto').value);
         let t = document.getElementById('gastoTipo').value;
-        if(m > 0) { gastos.push({m, t}); render(); calc(); }
+        if(m > 0) { gastos.push({m, t}); document.getElementById('gastoMonto').value = ""; render(); calc(); }
     }
+    
     function render() {
         let l = document.getElementById('listaGastos');
         l.innerHTML = "";
         gastos.forEach((g, i) => {
-            l.innerHTML += `<div class="gasto-fila">${g.t}: $${g.m.toFixed(2)} <span class="btn-x" onclick="del(${i})">x</span></div>`;
+            l.innerHTML += `<div class="gasto-fila">${g.t}: $${fmt(g.m)} <span class="btn-x" onclick="del(${i})">x</span></div>`;
         });
     }
+    
     function del(i) { gastos.splice(i, 1); render(); calc(); }
+    
     function calc() {
         let s = parseFloat(document.getElementById('sueldo').value) || 0;
         let tot = gastos.reduce((a,b) => a + b.m, 0);
         let dif = s - tot;
         let c = document.getElementById('resultadoCartel');
-        let v = document.getElementById('resVal');
-        if(dif < 0) { c.className="resultado deuda"; v.innerHTML = Math.abs(dif).toFixed(2); }
-        else { c.className="resultado favor"; v.innerHTML = dif.toFixed(2); }
+        c.className = dif < 0 ? "resultado deuda" : "resultado favor";
+        document.getElementById('resVal').innerHTML = fmt(Math.abs(dif));
     }
+
     function compartir() {
-        let msg = `SUELDO CLARO\nMes: ${document.getElementById('mes').value} ${document.getElementById('anio').value}\n`;
-        gastos.forEach(g => msg += `${g.t}: $${g.m.toFixed(2)}\n`);
-        let tot = gastos.reduce((a,b) => a + b.m, 0);
         let s = parseFloat(document.getElementById('sueldo').value) || 0;
-        msg += `Total Gastado: $${tot.toFixed(2)}\n${(s-tot)<0 ? "DEUDA: $"+Math.abs(s-tot).toFixed(2) : "A FAVOR: $"+(s-tot).toFixed(2)}`;
+        let tot = gastos.reduce((a,b) => a + b.m, 0);
+        let mayor = gastos.length > 0 ? gastos.reduce((prev, curr) => (prev.m > curr.m) ? prev : curr) : null;
+        
+        let msg = `🧾 *SUELDO CLARO* 🧾\n📅 ${document.getElementById('mes').value} ${document.getElementById('anio').value}\n\n`;
+        gastos.forEach(g => msg += `• ${g.t}: $${fmt(g.m)}\n`);
+        msg += `\n💰 *Total Gastado:* $${fmt(tot)}\n`;
+        
+        let dif = s - tot;
+        if (dif < 0) {
+            msg += `🔴 *DEUDA:* $${fmt(Math.abs(dif))}\n`;
+        } else {
+            msg += `🟢 *A FAVOR:* $${fmt(dif)}\n`;
+        }
+
+        if (mayor) {
+            msg += `\n⚠️ *ALERTA:* Tu mayor gasto es en *${mayor.t}* ($${fmt(mayor.m)}). ¡Tené cuidado ahí!`;
+        }
+
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`);
     }
 </script>
