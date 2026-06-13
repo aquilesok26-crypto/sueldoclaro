@@ -22,6 +22,7 @@
 
         input, select { width: 100%; padding: 12px; border-radius: 5px; border: none; margin-bottom: 12px; font-family: Arial; }
         .btn-add { background-color: #3b82f6; color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-delete-all { background-color: #64748b; color: white; border: none; padding: 12px; width: 100%; border-radius: 5px; cursor: pointer; margin-top: 10px; font-weight: bold; }
 
         .boleta { background-color: white; color: black; padding: 15px; border-radius: 5px; margin-bottom: 15px; }
         .gasto-fila { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 6px 0; font-size: 14px; }
@@ -41,26 +42,28 @@
 
     <div class="section">
         <span class="section-label">NOMBRE DE USUARIO</span>
-        <input type="text" id="nombre" placeholder="Ej: Juan Pérez">
+        <input type="text" id="nombre" placeholder="Ej: Juan Pérez" oninput="save()">
         <span class="section-label">SUELDO A DECLARAR ($)</span>
-        <input type="number" id="sueldo" placeholder="0,00" oninput="calc()">
+        <input type="text" id="sueldo" placeholder="0" oninput="formatInput(this); calc(); save()">
     </div>
 
     <div class="section">
-        <span class="section-label">MES</span>
-        <select id="mes"><option>Enero</option><option>Febrero</option><option>Marzo</option><option>Abril</option><option>Mayo</option><option selected>Junio</option><option>Julio</option><option>Agosto</option><option>Septiembre</option><option>Octubre</option><option>Noviembre</option><option>Diciembre</option></select>
-        <span class="section-label">AÑO</span>
-        <select id="anio"><option>2025</option><option selected>2026</option><option>2027</option></select>
+        <span class="section-label">MES / AÑO</span>
+        <div style="display:flex; gap:10px;">
+            <select id="mes" onchange="save()"><option>Enero</option><option>Febrero</option><option>Marzo</option><option>Abril</option><option>Mayo</option><option selected>Junio</option><option>Julio</option><option>Agosto</option><option>Septiembre</option><option>Octubre</option><option>Noviembre</option><option>Diciembre</option></select>
+            <select id="anio" onchange="save()"><option>2025</option><option selected>2026</option><option>2027</option></select>
+        </div>
     </div>
 
     <div class="section">
         <span class="section-label">CANTIDAD ($)</span>
-        <input type="number" id="gastoMonto" placeholder="0,00">
+        <input type="text" id="gastoMonto" placeholder="0" oninput="formatInput(this)">
         <span class="section-label">TIPO DE GASTO</span>
         <select id="gastoTipo">
             <option>Préstamos</option><option>Alquiler</option><option>Almacén</option><option>Carnicería</option>
             <option>Luz</option><option>Agua</option><option>Celular</option><option>Internet</option>
-            <option>Banco</option><option>Tarjeta</option><option>Gasto personal</option><option>Otros</option>
+            <option>Banco</option><option>Tarjeta</option><option>Plata Prestada</option><option>Ferretería</option>
+            <option>Lubricentro</option><option>Mecánico</option><option>Ropa</option><option>Gasto personal</option><option>Otros</option>
         </select>
         <button class="btn-add" onclick="addGasto()">+ AGREGAR GASTO</button>
     </div>
@@ -68,62 +71,94 @@
     <span class="section-label">DETALLES DE BOLETA</span>
     <div class="boleta" id="listaGastos"></div>
 
-    <div id="resultadoCartel" class="resultado favor">Saldo a favor: $<span id="resVal">0,00</span></div>
+    <div id="resultadoCartel" class="resultado favor"><span id="resTxt">Saldo a favor:</span> $<span id="resVal">0</span></div>
+    
     <button class="btn-share" onclick="compartir()">📩 COMPARTIR TICKET WHATSAPP</button>
+    <button class="btn-delete-all" onclick="borrarTodo()">🗑️ BORRAR TODO</button>
 </div>
 
 <script>
-    let gastos = [];
-    function fmt(n) { return n.toLocaleString('es-AR', {minimumFractionDigits: 2}); }
+    let gastos = JSON.parse(localStorage.getItem('gastos')) || [];
+    
+    window.onload = () => {
+        document.getElementById('nombre').value = localStorage.getItem('nombre') || '';
+        document.getElementById('sueldo').value = localStorage.getItem('sueldo') || '';
+        document.getElementById('mes').value = localStorage.getItem('mes') || 'Junio';
+        document.getElementById('anio').value = localStorage.getItem('anio') || '2026';
+        render(); calc();
+    };
+
+    function save() {
+        localStorage.setItem('nombre', document.getElementById('nombre').value);
+        localStorage.setItem('sueldo', document.getElementById('sueldo').value);
+        localStorage.setItem('mes', document.getElementById('mes').value);
+        localStorage.setItem('anio', document.getElementById('anio').value);
+        localStorage.setItem('gastos', JSON.stringify(gastos));
+    }
+
+    function formatInput(el) {
+        let val = el.value.replace(/\D/g, "");
+        el.value = val.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
 
     function addGasto() {
-        let m = parseFloat(document.getElementById('gastoMonto').value);
+        let m = parseFloat(document.getElementById('gastoMonto').value.replace(/,/g, ""));
         let t = document.getElementById('gastoTipo').value;
-        if(m > 0) { gastos.push({m, t}); document.getElementById('gastoMonto').value = ""; render(); calc(); }
+        if(m > 0) { gastos.push({m, t}); document.getElementById('gastoMonto').value = ""; render(); calc(); save(); }
     }
     
     function render() {
         let l = document.getElementById('listaGastos');
         l.innerHTML = "";
         gastos.forEach((g, i) => {
-            l.innerHTML += `<div class="gasto-fila">${g.t}: $${fmt(g.m)} <span class="btn-x" onclick="del(${i})">x</span></div>`;
+            l.innerHTML += `<div class="gasto-fila">${g.t}: $${g.m.toLocaleString()} <span class="btn-x" onclick="del(${i})">x</span></div>`;
         });
     }
     
-    function del(i) { gastos.splice(i, 1); render(); calc(); }
+    function del(i) { gastos.splice(i, 1); render(); calc(); save(); }
     
     function calc() {
-        let s = parseFloat(document.getElementById('sueldo').value) || 0;
+        let s = parseFloat(document.getElementById('sueldo').value.replace(/,/g, "")) || 0;
         let tot = gastos.reduce((a,b) => a + b.m, 0);
         let dif = s - tot;
         let c = document.getElementById('resultadoCartel');
-        c.className = dif < 0 ? "resultado deuda" : "resultado favor";
-        document.getElementById('resVal').innerHTML = fmt(Math.abs(dif));
+        let txt = document.getElementById('resTxt');
+        
+        if (dif < 0) {
+            c.className = "resultado deuda";
+            txt.innerHTML = "Deuda a pagar:";
+            document.getElementById('resVal').innerHTML = Math.abs(dif).toLocaleString();
+        } else {
+            c.className = "resultado favor";
+            txt.innerHTML = "Saldo a favor:";
+            document.getElementById('resVal').innerHTML = dif.toLocaleString();
+        }
+    }
+
+    function borrarTodo() {
+        if(confirm("¿Borrar todos los datos?")) {
+            localStorage.clear();
+            location.reload();
+        }
     }
 
     function compartir() {
-        let s = parseFloat(document.getElementById('sueldo').value) || 0;
+        let nom = document.getElementById('nombre').value || "Usuario";
+        let s = parseFloat(document.getElementById('sueldo').value.replace(/,/g, "")) || 0;
         let tot = gastos.reduce((a,b) => a + b.m, 0);
-        let mayor = gastos.length > 0 ? gastos.reduce((prev, curr) => (prev.m > curr.m) ? prev : curr) : null;
-        
-        let msg = `🧾 *SUELDO CLARO* 🧾\n📅 ${document.getElementById('mes').value} ${document.getElementById('anio').value}\n\n`;
-        gastos.forEach(g => msg += `• ${g.t}: $${fmt(g.m)}\n`);
-        msg += `\n💰 *Total Gastado:* $${fmt(tot)}\n`;
-        
         let dif = s - tot;
-        if (dif < 0) {
-            msg += `🔴 *DEUDA:* $${fmt(Math.abs(dif))}\n`;
-        } else {
-            msg += `🟢 *A FAVOR:* $${fmt(dif)}\n`;
-        }
+        let mayor = gastos.length > 0 ? gastos.reduce((p, c) => (p.m > c.m) ? p : c) : null;
+        
+        let msg = `🧾 *SUELDO CLARO* 🧾\n👤 *Usuario:* ${nom}\n📅 *${document.getElementById('mes').value} ${document.getElementById('anio').value}*\n\n`;
+        gastos.forEach(g => msg += `• ${g.t}: $${g.m.toLocaleString()}\n`);
+        msg += `\n💰 *Sueldo Original:* $${s.toLocaleString()}`;
+        msg += `\n📉 *Total Gastado:* $${tot.toLocaleString()}`;
+        msg += `\n${dif < 0 ? "🔴 *Deuda a pagar:* $" + Math.abs(dif).toLocaleString() : "🟢 *Saldo a favor:* $" + dif.toLocaleString()}`;
 
-        if (mayor) {
-            msg += `\n⚠️ *ALERTA:* Tu mayor gasto es en *${mayor.t}* ($${fmt(mayor.m)}). ¡Tené cuidado ahí!`;
-        }
+        if (mayor) msg += `\n\n⚠️ *ALERTA:* Tu mayor gasto es en *${mayor.t}* ($${mayor.m.toLocaleString()}).`;
 
         window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`);
     }
 </script>
-
 </body>
 </html>
